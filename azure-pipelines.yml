@@ -35,31 +35,27 @@ stages:
       inputs:
         Contents: 'target/*.jar'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
-    
+
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'drop'
 
 - stage: DeployToDev
-  dependsOn: Build
+  dependsOn: Build  # Ensure sequential execution
   jobs:
-  - deployment: Deploy
+  - job: DeployJob
     pool:
       vmImage: 'ubuntu-latest'
     environment: 'development'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'bank-app-connection'
-              appName: $(devAppName)
-              resourceGroupName: $(devResourceGroup)
-              package: '$(Pipeline.Workspace)/drop/*.jar'
-              appSettings: |
-                -SPRING_PROFILES_ACTIVE=dev
-                -MONGODB_URI=$(DEV_MONGODB_URI)
-                -JWT_SECRET=$(DEV_JWT_SECRET)
-
+    steps:
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'bank-app-connection'
+        appName: $(devAppName)
+        resourceGroupName: $(devResourceGroup)
+        package: '$(Pipeline.Workspace)/drop/*.jar'
+        appSettings: |
+          -SPRING_PROFILES_ACTIVE=dev
+          -MONGODB_URI=$(DEV_MONGODB_URI)
+          -JWT_SECRET=$(DEV_JWT_SECRET)
