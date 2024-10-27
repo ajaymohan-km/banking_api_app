@@ -1,59 +1,75 @@
-trigger:
-  branches:
-    include:
-    - develop
+name: Build and Deploy to Azure
 
-variables:
-  - group: banking-app-variables
-  - name: devAppName
-    value: 'banking-app-dev'
-  - name: devResourceGroup
-    value: 'banking-rg-dev'
+on:
+  push:
+    branches:
+      - develop
 
-stages:
-- stage: Build
-  jobs:
-  - job: BuildJob
-    pool:
-      vmImage: 'ubuntu-latest'
+env:
+  DEV_APP_NAME: banking-app-dev
+  DEV_RESOURCE_GROUP: banking-rg-dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
     steps:
-    - task: Maven@3
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'clean package'
-        publishJUnitResults: true
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        javaHomeOption: 'JDKVersion'
-        jdkVersionOption: '17'
+    - uses: actions/checkout@v3
     
-    - task: CopyFiles@2
-      inputs:
-        Contents: 'target/*.jar'
-        TargetFolder: '$(Build.ArtifactStagingDirectory)'
-    
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'drop'
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Build with Maven
+      run: mvn clean package
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app
+        path: target/*.jar
 
-- stage: DeployToDev
-  dependsOn: Build
-  jobs:
-  - deployment: Deploy
-    pool:
-      vmImage: 'ubuntu-latest'
-    environment: 'development'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'bank-app-connection'
-              appName: $(devAppName)
-              resourceGroupName: $(devResourceGroup)
-              package: '$(Pipeline.Workspace)/drop/*.jar'
-              appSettings: |
-                -SPRING_PROFILES_ACTIVE=dev
-                -MONGODB_URI=$(DEV_MONGODB_URI)
-                -JWT_SECRET=$(DEV_JWT_SECRET)
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: app
+        
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.DEV_APP_NAME }}
+        package: '*.jar'
+        
+    - name: Configure App Settings
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: ${{ env.DEV_APP_NAME }}
+        resource-group: ${{ env.DEV_RESOURCE_GROUP }}
+        app-settings-json: |
+          [
+            {
+              "name": "SPRING_PROFILES_ACTIVE",
+              "value": "dev"
+            },
+            {
+              "name": "MONGODB_URI",
+              "value": "${{ secrets.DEV_MONGODB_URI }}"
+            },
+            {
+              "name": "JWT_SECRET",
+              "value": "${{ secrets.DEV_JWT_SECRET }}"
+            }
+          ]
