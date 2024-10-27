@@ -62,7 +62,7 @@ stages:
           steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: 'Pay-As-You-Go'
+              azureSubscription: 'bank-app-connection'
               appName: $(devAppName)
               resourceGroupName: $(devResourceGroup)
               package: '$(Pipeline.Workspace)/drop/*.jar'
@@ -85,7 +85,7 @@ stages:
           steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: 'Pay-As-You-Go'
+              azureSubscription: 'bank-app-connection'
               appName: $(prodAppName)
               resourceGroupName: $(prodResourceGroup)
               package: '$(Pipeline.Workspace)/drop/*.jar'
