@@ -6,7 +6,7 @@ on:
       - develop
 
 env:
-  DEV_APP_NAME: banking-app-dev
+  DEV_APP_NAME: banking-app-dev-egcrc2h7g0aycuef.canadacentral-01
   DEV_RESOURCE_GROUP: banking-rg-dev
 
 jobs:
