@@ -1,0 +1,50 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+  branches:
+    include:
+    - develop
+
+variables:
+  - group: banking-app-variables
+  - name: devAppName
+    value: 'banking-app-dev'
+  - name: devResourceGroup
+    value: 'banking-rg-dev'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean package'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '17'
+
+- task: CopyFiles@2
+  inputs:
+    Contents: 'target/*.jar'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'bank-app-connection'
+    appName: $(devAppName)
+    resourceGroupName: $(devResourceGroup)
+    package: '$(Build.ArtifactStagingDirectory)/*.jar'
+    appSettings: |
+      -SPRING_PROFILES_ACTIVE=dev
+      -MONGODB_URI=$(DEV_MONGODB_URI)
+      -JWT_SECRET=$(DEV_JWT_SECRET)
