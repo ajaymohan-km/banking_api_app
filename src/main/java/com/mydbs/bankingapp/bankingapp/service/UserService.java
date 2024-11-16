@@ -6,11 +6,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mydbs.bankingapp.bankingapp.model.BankerRegistrationRequest;
 import com.mydbs.bankingapp.bankingapp.model.User;
 import com.mydbs.bankingapp.bankingapp.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -18,6 +21,7 @@ import java.util.List;
 public class UserService implements UserDetailsService {
     
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -58,4 +62,18 @@ public class UserService implements UserDetailsService {
     public void deleteUser(String id) {
         userRepository.deleteById(id);
     }
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+        public User registerBanker(BankerRegistrationRequest request) {
+        User banker = new User();
+        banker.setUsername(request.getUsername());
+        banker.setPassword(passwordEncoder.encode(request.getPassword()));
+        banker.setEmail(request.getEmail());
+        banker.setFullName(request.getFullName());
+        banker.setRoles(Collections.singleton("BANKER"));
+        return saveUser(banker);
+    }
+
 }
