@@ -14,6 +14,7 @@ import com.mydbs.bankingapp.bankingapp.model.User;
 import com.mydbs.bankingapp.bankingapp.repository.UserRepository;
 import com.mydbs.bankingapp.bankingapp.util.JwtUtil;
 
+import java.util.Collections;
 import java.util.HashSet;
 
 @Service
@@ -30,7 +31,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
-        user.setRoles(new HashSet<>(request.getRoles()));
+        user.setRoles(Collections.singleton(request.getRole()));
         
         userRepository.save(user);
         
