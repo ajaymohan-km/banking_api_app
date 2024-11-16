@@ -29,7 +29,7 @@ public class RegisterRequest {
     @NotBlank(message = "Full name is required")
     private String fullName;
 
-    private Set<String> roles;
+    private String role;
     
     private String phoneNumber;
     
