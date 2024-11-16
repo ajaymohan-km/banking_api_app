@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.mydbs.bankingapp.bankingapp.model.BankerRegistrationRequest;
 import com.mydbs.bankingapp.bankingapp.model.User;
+import com.mydbs.bankingapp.bankingapp.model.UserStats;
 import com.mydbs.bankingapp.bankingapp.repository.UserRepository;
 
 import java.util.Collections;
@@ -74,6 +75,19 @@ public class UserService implements UserDetailsService {
         banker.setFullName(request.getFullName());
         banker.setRoles(Collections.singleton("BANKER"));
         return saveUser(banker);
+    }
+
+        public int countCustomers() {
+        return userRepository.countByRoles("CUSTOMER");
+    }
+
+    public UserStats collectUserStats() {
+        UserStats stats = new UserStats();
+        stats.setTotalUsers((int) userRepository.count());
+        stats.setActiveCustomers(countCustomers());
+        stats.setActiveBankers(userRepository.countByRoles("BANKER"));
+        stats.setActiveAdmins(userRepository.countByRoles("ADMIN"));
+        return stats;
     }
 
 }

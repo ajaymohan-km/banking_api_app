@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class Transaction {
     @Id
     private String id;
+    private String userId; 
     private String fromAccountId;
     private String toAccountId;
     private BigDecimal amount;
