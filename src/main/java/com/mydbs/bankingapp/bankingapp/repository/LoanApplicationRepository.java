@@ -1,5 +1,6 @@
 package com.mydbs.bankingapp.bankingapp.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,6 @@ public interface LoanApplicationRepository extends MongoRepository<LoanApplicati
     List<LoanApplication> findByUserId(String userId);
     List<LoanApplication> findByStatus(String status);
     List<LoanApplication> findByUserIdAndStatus(String userId, String status);
+    List<LoanApplication> findByOrderByApplicationDateDesc(Pageable pageable);
+    int countByStatus(String status);
 }

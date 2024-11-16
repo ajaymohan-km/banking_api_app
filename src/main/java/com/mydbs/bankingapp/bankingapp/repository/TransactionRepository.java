@@ -1,5 +1,6 @@
 package com.mydbs.bankingapp.bankingapp.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,5 @@ public interface TransactionRepository extends MongoRepository<Transaction, Stri
     List<Transaction> findByToAccountId(String accountId);
     List<Transaction> findByFromAccountIdOrToAccountId(String fromAccountId, String toAccountId);
     List<Transaction> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
+    List<Transaction> findByUserIdOrderByTimestampDesc(String userId, Pageable pageable);
 }

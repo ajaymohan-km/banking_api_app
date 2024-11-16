@@ -6,12 +6,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mydbs.bankingapp.bankingapp.model.Account;
+import com.mydbs.bankingapp.bankingapp.model.AccountSummary;
 import com.mydbs.bankingapp.bankingapp.model.Transaction;
 import com.mydbs.bankingapp.bankingapp.model.TransferRequest;
 import com.mydbs.bankingapp.bankingapp.repository.AccountRepository;
 import com.mydbs.bankingapp.bankingapp.repository.TransactionRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,5 +51,25 @@ public class AccountService {
         transaction.setAmount(request.getAmount());
 
         return transactionRepository.save(transaction);
+    }
+        public List<AccountSummary> getAccountSummaries(String userId) {
+        return accountRepository.findByUserId(userId)
+            .stream()
+            .map(account -> {
+                AccountSummary summary = new AccountSummary();
+                summary.setAccountId(account.getId());
+                summary.setAccountNumber(account.getAccountNumber());
+                summary.setCurrentBalance(account.getBalance());
+                summary.setAccountType(account.getAccountType());
+                return summary;
+            })
+            .collect(Collectors.toList());
+    }
+
+    public BigDecimal calculateTotalBalance(String userId) {
+        return accountRepository.findByUserId(userId)
+            .stream()
+            .map(Account::getBalance)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
