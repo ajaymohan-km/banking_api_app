@@ -2,6 +2,7 @@ package com.mydbs.bankingapp.bankingapp.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ public class Transaction {
     private String fromAccountId;
     private String toAccountId;
     private BigDecimal amount;
+    @Indexed
     private LocalDateTime timestamp = LocalDateTime.now();
     private String status;
     private String description;

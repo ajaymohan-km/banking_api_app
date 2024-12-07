@@ -32,9 +32,12 @@ public class TransactionService {
     public List<Transaction> getTransactionsBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
         return transactionRepository.findByTimestampBetween(startDate, endDate);
     }
-        public List<TransactionSummary> getRecentTransactions(String userId, int limit) {
-        return transactionRepository.findByUserIdOrderByTimestampDesc(userId, PageRequest.of(0, limit))
+    
+    public List<TransactionSummary> getRecentTransactions(String userId, int limit) {
+        return transactionRepository.findByUserId(userId)
             .stream()
+            .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
+            .limit(limit)
             .map(transaction -> {
                 TransactionSummary summary = new TransactionSummary();
                 summary.setTransactionId(transaction.getId());
@@ -44,6 +47,7 @@ public class TransactionService {
             })
             .collect(Collectors.toList());
     }
+    
 
     public TransactionStats collectTransactionStats() {
         TransactionStats stats = new TransactionStats();
