@@ -29,6 +29,7 @@ public class LoanService {
         loan.setAmount(request.getAmount());
         loan.setStatus("PENDING");
         loan.setPurpose(request.getPurpose());
+        loan.setTermInMonths(request.getTermInMonths());
         loan.setMonthlyIncome(request.getMonthlyIncome());
         loan.setEmploymentStatus(request.getEmploymentStatus());
         return loanRepository.save(loan);
@@ -70,12 +71,24 @@ public class LoanService {
         return loanRepository.countByStatus("PENDING");
     }
 
-    public List<LoanApplicationSummary> getRecentApplications(int limit) {
-        return loanRepository.findByOrderByApplicationDateDesc(PageRequest.of(0, limit))
+        public List<LoanApplicationSummary> getRecentApplications(int limit) {
+            return loanRepository.findAll()
                 .stream()
-                .map(this::convertToLoanApplicationSummary)
+                .sorted((a1, a2) -> a2.getApplicationDate().compareTo(a1.getApplicationDate()))
+                .limit(limit)
+                .map(loan -> {
+                    LoanApplicationSummary summary = new LoanApplicationSummary();
+                    summary.setApplicationId(loan.getId());
+                    summary.setCustomerId(loan.getUserId());
+                    summary.setLoanType(loan.getPurpose());
+                    summary.setStatus(loan.getStatus());
+                    summary.setApplicationDate(loan.getApplicationDate());
+                    summary.setRequestedAmount(loan.getAmount());
+
+                    return summary;
+                })
                 .collect(Collectors.toList());
-    }
+        }
 
     private LoanSummary convertToLoanSummary(LoanApplication loan) {
         LoanSummary summary = new LoanSummary();

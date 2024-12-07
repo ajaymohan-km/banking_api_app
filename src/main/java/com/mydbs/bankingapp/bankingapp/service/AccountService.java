@@ -6,14 +6,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mydbs.bankingapp.bankingapp.model.Account;
+import com.mydbs.bankingapp.bankingapp.model.AccountCreationRequest;
+import com.mydbs.bankingapp.bankingapp.model.AccountLinkRequest;
 import com.mydbs.bankingapp.bankingapp.model.AccountSummary;
 import com.mydbs.bankingapp.bankingapp.model.Transaction;
 import com.mydbs.bankingapp.bankingapp.model.TransferRequest;
+import com.mydbs.bankingapp.bankingapp.model.User;
 import com.mydbs.bankingapp.bankingapp.repository.AccountRepository;
 import com.mydbs.bankingapp.bankingapp.repository.TransactionRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,14 +50,25 @@ public class AccountService {
 
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
+        String userId = userService.getCurrentUserId();
 
         Transaction transaction = new Transaction();
         transaction.setFromAccountId(fromAccount.getId());
+        transaction.setUserId(userId);
         transaction.setToAccountId(toAccount.getId());
         transaction.setAmount(request.getAmount());
 
         return transactionRepository.save(transaction);
     }
+  
+
+
+
+
+
+
+
+    
         public List<AccountSummary> getAccountSummaries(String userId) {
         return accountRepository.findByUserId(userId)
             .stream()
@@ -72,4 +89,42 @@ public class AccountService {
             .map(Account::getBalance)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public Account createAccount(AccountCreationRequest request) {
+        // Get current authenticated user
+        User currentUser = userService.getCurrentUser();
+        
+        Account account = new Account();
+        account.setUserId(currentUser.getId());
+        account.setAccountType(request.getAccountType());
+        account.setBalance(request.getInitialDeposit());
+        account.setAccountNumber(generateAccountNumber());
+        account.setActive(true);
+        
+        return accountRepository.save(account);
+    }
+
+    private String generateAccountNumber() {
+        // Generate a unique 10-digit account number
+        return String.format("%010d", new Random().nextInt(1000000000));
+    }
+    
+public Account linkExistingAccount(AccountLinkRequest request) {
+    User currentUser = userService.getCurrentUser();
+    
+    // Verify account exists and not already linked
+    Account existingAccount = accountRepository.findByAccountNumber(request.getAccountNumber())
+        .orElseThrow(() -> new RuntimeException("Account not found"));
+        
+    if (existingAccount.getUserId() != null) {
+        throw new IllegalStateException("Account already linked to a user");
+    }
+    
+    existingAccount.setUserId(currentUser.getId());
+    existingAccount.setAccountType(request.getAccountType());
+    existingAccount.setActive(true);
+    
+    return accountRepository.save(existingAccount);
 }
+}
+

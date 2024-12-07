@@ -16,4 +16,5 @@ public interface TransactionRepository extends MongoRepository<Transaction, Stri
     List<Transaction> findByFromAccountIdOrToAccountId(String fromAccountId, String toAccountId);
     List<Transaction> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
     List<Transaction> findByUserIdOrderByTimestampDesc(String userId, Pageable pageable);
+    List<Transaction> findByUserId(String userId);
 }

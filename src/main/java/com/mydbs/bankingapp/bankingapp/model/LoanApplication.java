@@ -2,6 +2,7 @@ package com.mydbs.bankingapp.bankingapp.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ public class LoanApplication {
     private Integer termInMonths;
     private String employmentStatus;
     private BigDecimal monthlyIncome;
+    @Indexed 
     private LocalDateTime applicationDate = LocalDateTime.now();
     private LocalDateTime lastUpdated = LocalDateTime.now();
     private String approvedBy;
